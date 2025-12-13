@@ -19,9 +19,14 @@
     },
     "autoload": {
         "psr-4": {
-            "Blamodex\\Consent\\": "src/",
+            "Blamodex\\Consent\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
             "Blamodex\\Consent\\Tests\\": "tests/",
-            "Blamodex\\Consent\\Database\\": "database/"
+            "Blamodex\\Consent\\Database\\Factories\\": "database/factories/",
+            "Blamodex\\Consent\\Database\\Seeders\\": "database/seeders/"
         }
     },
     "authors": [
