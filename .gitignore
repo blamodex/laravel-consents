@@ -1,0 +1,7 @@
+*.log
+.DS_Store
+.phpunit.result.cache
+/vendor
+/composer.lock
+/tests/reports
+/agents

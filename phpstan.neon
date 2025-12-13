@@ -1,0 +1,15 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/nesbot/carbon/extension.neon
+
+parameters:
+
+    paths:
+        - src/
+
+    level: 6
+
+    ignoreErrors:
+        - '#Trait Blamodex\\Consent\\Traits\\Consentable is used zero times and is not analysed.#'
+        - '#Class .* uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types: TFactory#'
+        - '#Method .* should return .* but returns .*\$this.*#'

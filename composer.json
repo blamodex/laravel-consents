@@ -1,0 +1,70 @@
+{
+    "name": "blamodex/laravel-consents",
+    "description": "A simple, Laravel-ready consents package for rapid prototyping and lightweight use cases.",
+    "type": "library",
+    "keywords": [
+        "laravel",
+        "consent",
+        "privacy",
+        "gdpr",
+        "compliance",
+        "consent-management",
+        "data-protection"
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/blamodex/laravel-consents",
+    "support": {
+        "issues": "https://github.com/blamodex/laravel-consents/issues",
+        "source": "https://github.com/blamodex/laravel-consents"
+    },
+    "autoload": {
+        "psr-4": {
+            "Blamodex\\Consent\\": "src/",
+            "Blamodex\\Consent\\Tests\\": "tests/",
+            "Blamodex\\Consent\\Database\\": "database/"
+        }
+    },
+    "authors": [
+        {
+            "name": "blackmage-codex",
+            "email": "admin@joelblodgett.ca"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^12.0",
+        "illuminate/config": "^12.0",
+        "illuminate/database": "^12.0",
+        "illuminate/queue": "^12.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5.3",
+        "orchestra/testbench": "^10.0",
+        "squizlabs/php_codesniffer": "4.x-dev",
+        "phpunit/php-code-coverage": "*",
+        "larastan/larastan": "^3.0",
+        "slevomat/coding-standard": "^8.0@dev",
+        "blamodex/laravel-ai-agents": "^1.0"
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:coverage": "XDEBUG_MODE=coverage phpunit --coverage-html=tests/reports",
+        "lint": "phpcs --standard=.phpcs.xml src tests",
+        "lint:fix": "phpcbf --standard=.phpcs.xml src tests",
+        "analyze": "vendor/bin/phpstan analyse --memory-limit=256M"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Blamodex\\Consent\\ConsentServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
