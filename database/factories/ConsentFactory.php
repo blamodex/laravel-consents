@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blamodex\Consent\Database\Factories;
 
 use Blamodex\Consent\Models\Consent;
