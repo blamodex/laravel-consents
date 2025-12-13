@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Blamodex\Consent\Database\Seeders;
 
 use Blamodex\Consent\Models\ConsentType;

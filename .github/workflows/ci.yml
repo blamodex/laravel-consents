@@ -30,7 +30,7 @@ jobs:
           coverage: none
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: composer install --no-interaction --prefer-dist
 
       - name: Run linting
         run: composer lint
