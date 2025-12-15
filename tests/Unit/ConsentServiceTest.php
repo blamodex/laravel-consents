@@ -509,4 +509,240 @@ class ConsentServiceTest extends TestCase
 
         $this->assertFalse($result);
     }
+
+    // ==========================================
+    // Transfer Methods
+    // ==========================================
+
+    #[Test]
+    public function it_can_transfer_consents_between_consentable_models(): void
+    {
+        $sourceUser = DummyConsentUser::factory()->create(['name' => 'Source User']);
+        $targetUser = DummyConsentUser::factory()->create(['name' => 'Target User']);
+        
+        $consentType1 = ConsentType::factory()->create(['slug' => 'email-marketing']);
+        $consentType2 = ConsentType::factory()->create(['slug' => 'sms-marketing']);
+        $source = ConsentSource::factory()->create(['slug' => 'web-form']);
+
+        $attributes = [
+            'consents' => [
+                [
+                    'slug' => 'email-marketing',
+                    'source' => 'web-form',
+                    'text' => 'Email consent',
+                    'state' => 'consented',
+                ],
+                [
+                    'slug' => 'sms-marketing',
+                    'source' => 'web-form',
+                    'text' => 'SMS consent',
+                    'state' => 'consented',
+                ],
+            ],
+        ];
+
+        $this->service->createConsents($sourceUser, $attributes);
+
+        // Assert source has 2 consents before transfer
+        $this->assertCount(2, $sourceUser->fresh()->consents);
+
+        // Act
+        $transferred = $this->service->transferConsents($sourceUser, $targetUser);
+
+        // Assert
+        $this->assertCount(2, $transferred);
+        $this->assertCount(0, $sourceUser->fresh()->consents);
+        $this->assertCount(2, $targetUser->fresh()->consents);
+
+        foreach ($transferred as $consent) {
+            $this->assertEquals($targetUser->id, $consent->consentable_id);
+            $this->assertEquals($targetUser->getMorphClass(), $consent->consentable_type);
+            $this->assertEquals($sourceUser->id, $consent->transferable_id);
+            $this->assertEquals($sourceUser->getMorphClass(), $consent->transferable_type);
+            $this->assertNotNull($consent->transferred_at);
+        }
+    }
+
+    #[Test]
+    public function it_returns_empty_array_when_transferring_no_consents(): void
+    {
+        $sourceUser = DummyConsentUser::factory()->create();
+        $targetUser = DummyConsentUser::factory()->create();
+
+        $transferred = $this->service->transferConsents($sourceUser, $targetUser);
+
+        $this->assertIsArray($transferred);
+        $this->assertCount(0, $transferred);
+    }
+
+    #[Test]
+    public function it_can_get_consents_by_consentable(): void
+    {
+        $user = DummyConsentUser::factory()->create();
+        $consentType = ConsentType::factory()->create(['slug' => 'email-marketing']);
+        $source = ConsentSource::factory()->create(['slug' => 'web-form']);
+
+        $attributes = [
+            'consents' => [
+                [
+                    'slug' => 'email-marketing',
+                    'source' => 'web-form',
+                    'text' => 'Email consent',
+                    'state' => 'consented',
+                ],
+            ],
+        ];
+
+        $this->service->createConsents($user, $attributes);
+
+        $consents = $this->service->getConsentsByConsentable($user);
+
+        $this->assertIsArray($consents);
+        $this->assertCount(1, $consents);
+        $this->assertEquals($user->id, $consents[0]->consentable_id);
+    }
+
+    #[Test]
+    public function it_returns_empty_array_when_consentable_has_no_consents(): void
+    {
+        $user = DummyConsentUser::factory()->create();
+
+        $consents = $this->service->getConsentsByConsentable($user);
+
+        $this->assertIsArray($consents);
+        $this->assertCount(0, $consents);
+    }
+
+    #[Test]
+    public function it_only_gets_active_consents_not_soft_deleted(): void
+    {
+        $user = DummyConsentUser::factory()->create();
+        $consentType = ConsentType::factory()->create(['slug' => 'email-marketing']);
+        $source = ConsentSource::factory()->create(['slug' => 'web-form']);
+
+        $attributes = [
+            'consents' => [
+                [
+                    'slug' => 'email-marketing',
+                    'source' => 'web-form',
+                    'text' => 'Email consent',
+                    'state' => 'consented',
+                ],
+            ],
+        ];
+
+        $this->service->createConsents($user, $attributes);
+        $consent = $user->consents->first();
+        $consent->delete(); // Soft delete
+
+        $consents = $this->service->getConsentsByConsentable($user);
+
+        $this->assertCount(0, $consents);
+    }
+
+    // ==========================================
+    // revokedByConsentable() Method
+    // ==========================================
+
+    #[Test]
+    public function it_returns_true_when_user_has_revoked_consent(): void
+    {
+        $user = DummyConsentUser::factory()->create();
+        $consentType = ConsentType::factory()->create(['slug' => 'email-marketing']);
+
+        Consent::factory()->revoked()->create([
+            'consentable_id' => $user->id,
+            'consentable_type' => DummyConsentUser::class,
+            'consent_type_id' => $consentType->id,
+        ]);
+
+        $result = $this->service->revokedByConsentable($user, 'email-marketing');
+
+        $this->assertTrue($result);
+    }
+
+    #[Test]
+    public function it_returns_false_when_no_revoked_consent_exists(): void
+    {
+        $user = DummyConsentUser::factory()->create();
+        ConsentType::factory()->create(['slug' => 'email-marketing']);
+
+        $result = $this->service->revokedByConsentable($user, 'email-marketing');
+
+        $this->assertFalse($result);
+    }
+
+    #[Test]
+    public function it_returns_false_when_only_consented_status_exists(): void
+    {
+        $user = DummyConsentUser::factory()->create();
+        $consentType = ConsentType::factory()->create(['slug' => 'email-marketing']);
+
+        Consent::factory()->create([
+            'consentable_id' => $user->id,
+            'consentable_type' => DummyConsentUser::class,
+            'consent_type_id' => $consentType->id,
+            'status' => 'consented',
+        ]);
+
+        $result = $this->service->revokedByConsentable($user, 'email-marketing');
+
+        $this->assertFalse($result);
+    }
+
+    #[Test]
+    public function it_returns_false_when_consent_type_does_not_exist_for_revoked_check(): void
+    {
+        $user = DummyConsentUser::factory()->create();
+
+        $result = $this->service->revokedByConsentable($user, 'non-existent-type');
+
+        $this->assertFalse($result);
+    }
+
+    #[Test]
+    public function it_only_checks_revoked_status_for_specific_user(): void
+    {
+        $user1 = DummyConsentUser::factory()->create();
+        $user2 = DummyConsentUser::factory()->create();
+        $consentType = ConsentType::factory()->create(['slug' => 'email-marketing']);
+
+        // User2 has revoked consent
+        Consent::factory()->revoked()->create([
+            'consentable_id' => $user2->id,
+            'consentable_type' => DummyConsentUser::class,
+            'consent_type_id' => $consentType->id,
+        ]);
+
+        // User1 has not revoked
+        $result = $this->service->revokedByConsentable($user1, 'email-marketing');
+
+        $this->assertFalse($result);
+    }
+
+    #[Test]
+    public function it_checks_revoked_status_for_correct_consent_type(): void
+    {
+        $user = DummyConsentUser::factory()->create();
+        $emailType = ConsentType::factory()->create(['slug' => 'email-marketing']);
+        $smsType = ConsentType::factory()->create(['slug' => 'sms-marketing']);
+
+        // User has revoked email consent
+        Consent::factory()->revoked()->create([
+            'consentable_id' => $user->id,
+            'consentable_type' => DummyConsentUser::class,
+            'consent_type_id' => $emailType->id,
+        ]);
+
+        // User has consented to SMS (not revoked)
+        Consent::factory()->create([
+            'consentable_id' => $user->id,
+            'consentable_type' => DummyConsentUser::class,
+            'consent_type_id' => $smsType->id,
+            'status' => 'consented',
+        ]);
+
+        $this->assertTrue($this->service->revokedByConsentable($user, 'email-marketing'));
+        $this->assertFalse($this->service->revokedByConsentable($user, 'sms-marketing'));
+    }
 }

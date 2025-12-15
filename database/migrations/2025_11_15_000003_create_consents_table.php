@@ -21,9 +21,13 @@ return new class extends Migration
             // Polymorphic relationship
             $table->morphs('consentable');
 
+            // Polymorphic relationship for transferable entity (nullable until transfer occurs)
+            $table->nullableMorphs('transferable');
+
             $table->text('consent_text')->nullable();
             $table->string('status')->default('consented');
 
+            $table->timestamp('transferred_at')->nullable();
             $table->timestamp('consented_at')->nullable();
             $table->timestamp('revoked_at')->nullable();
 

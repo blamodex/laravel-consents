@@ -396,4 +396,95 @@ class ConsentableTraitTest extends TestCase
 
         $this->assertFalse($user->consentedTo('email-marketing'));
     }
+
+    // ==========================================
+    // claimConsents() Method
+    // ==========================================
+
+    #[Test]
+    public function it_can_claim_consents_from_transferable_model(): void
+    {
+        $sourceUser = DummyConsentUser::factory()->create();
+        $targetUser = DummyConsentUser::factory()->create();
+        
+        $emailType = \Blamodex\Consent\Models\ConsentType::factory()->create(['slug' => 'email-marketing']);
+        $dataType = \Blamodex\Consent\Models\ConsentType::factory()->create(['slug' => 'data-processing']);
+        $webSource = \Blamodex\Consent\Models\ConsentSource::factory()->create(['slug' => 'web-form']);
+        $mobileSource = \Blamodex\Consent\Models\ConsentSource::factory()->create(['slug' => 'mobile-app']);
+
+        $payload = [
+            'consents' => [
+                [
+                    'slug' => 'email-marketing',
+                    'source' => 'web-form',
+                    'text' => 'Email consent',
+                    'state' => 'consented',
+                ],
+                [
+                    'slug' => 'data-processing',
+                    'source' => 'mobile-app',
+                    'text' => 'Data consent',
+                    'state' => 'consented',
+                ],
+            ],
+        ];
+
+        $sourceUser->createConsents($payload);
+
+        // Act - Use the Consentable trait's claimConsents method
+        $claimed = $targetUser->claimConsents($sourceUser);
+
+        // Assert
+        $this->assertCount(2, $claimed);
+        $this->assertCount(0, $sourceUser->fresh()->consents);
+        $this->assertCount(2, $targetUser->fresh()->consents);
+        
+        // Verify the consents now belong to target user
+        foreach ($claimed as $consent) {
+            $this->assertEquals($targetUser->id, $consent->consentable_id);
+            $this->assertEquals($sourceUser->id, $consent->transferable_id);
+            $this->assertNotNull($consent->transferred_at);
+        }
+    }
+
+    #[Test]
+    public function it_returns_empty_array_when_claiming_from_user_with_no_consents(): void
+    {
+        $sourceUser = DummyConsentUser::factory()->create();
+        $targetUser = DummyConsentUser::factory()->create();
+
+        $claimed = $targetUser->claimConsents($sourceUser);
+
+        $this->assertIsArray($claimed);
+        $this->assertCount(0, $claimed);
+    }
+
+    #[Test]
+    public function it_delegates_to_consent_service_for_claim(): void
+    {
+        $sourceUser = DummyConsentUser::factory()->create();
+        $targetUser = DummyConsentUser::factory()->create();
+        
+        $consentType = \Blamodex\Consent\Models\ConsentType::factory()->create(['slug' => 'test-consent']);
+        $consentSource = \Blamodex\Consent\Models\ConsentSource::factory()->create(['slug' => 'test-source']);
+
+        $payload = [
+            'consents' => [
+                [
+                    'slug' => 'test-consent',
+                    'source' => 'test-source',
+                    'text' => 'Test consent',
+                    'state' => 'consented',
+                ],
+            ],
+        ];
+
+        $sourceUser->createConsents($payload);
+
+        // This tests that the trait properly delegates to ConsentService
+        $claimed = $targetUser->claimConsents($sourceUser);
+
+        $this->assertIsArray($claimed);
+        $this->assertCount(1, $claimed);
+    }
 }

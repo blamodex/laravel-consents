@@ -42,29 +42,29 @@ A lightweight Laravel package to add GDPR-compliant consent management capabilit
 
 Install the package with Composer:
 
-\`\`\`bash
+```bash
 composer require blamodex/laravel-consents
-\`\`\`
+```
 
 Publish the config file:
 
-\`\`\`bash
+```bash
 php artisan vendor:publish --tag=blamodex-consent-config
-\`\`\`
+```
 
 Run the migrations:
 
-\`\`\`bash
+```bash
 php artisan migrate
-\`\`\`
+```
 
 ---
 
 ## ⚙️ Configuration
 
-Configuration lives in \`config/consent.php\`:
+Configuration lives in `config/consent.php`:
 
-\`\`\`php
+```php
 return [
     'tables' => [
         'consents' => 'consents',
@@ -86,7 +86,7 @@ return [
     ],
     'retention_days' => null,
 ];
-\`\`\`
+```
 
 ---
 
@@ -94,7 +94,7 @@ return [
 
 ### 1. Use the Consentable trait
 
-\`\`\`php
+```php
 use Blamodex\Consent\Traits\Consentable;
 use Blamodex\Consent\Contracts\ConsentableInterface;
 
@@ -102,11 +102,11 @@ class User extends Model implements ConsentableInterface
 {
     use Consentable;
 }
-\`\`\`
+```
 
 ### 2. Create consents
 
-\`\`\`php
+```php
 $user = User::find(1);
 
 $consents = $user->createConsents([
@@ -116,19 +116,19 @@ $consents = $user->createConsents([
         ['slug' => 'sms-marketing', 'state' => 'rejected']
     ]
 ]);
-\`\`\`
+```
 
 ### 3. Check consent status
 
-\`\`\`php
+```php
 if ($user->consentedTo('email-marketing')) {
     // User has consented to email marketing
 }
-\`\`\`
+```
 
 ### 4. Validate consent payload
 
-\`\`\`php
+```php
 use Blamodex\Consent\Validators\ConsentValidator;
 
 $validator = new ConsentValidator();
@@ -137,18 +137,18 @@ if ($validator->passes($payload)) {
 } else {
     $errors = $validator->errors();
 }
-\`\`\`
+```
 
 ### 5. Use the ConsentService directly
 
-\`\`\`php
+```php
 use Blamodex\Consent\Services\ConsentService;
 
 $consentService = app(ConsentService::class);
 $consents = $consentService->createConsents($user, $payload);
 $hasConsented = $consentService->consentedToByConsentable($user, 'email-marketing');
 $formatted = $consentService->formatConsentsFrontend($user);
-\`\`\`
+```
 
 ---
 
@@ -156,39 +156,39 @@ $formatted = $consentService->formatConsentsFrontend($user);
 
 Run tests:
 
-\`\`\`bash
+```bash
 composer test
-\`\`\`
+```
 
 Check code style:
 
-\`\`\`bash
+```bash
 composer lint
-\`\`\`
+```
 
 Check code style and fix:
 
-\`\`\`bash
+```bash
 composer lint:fix
-\`\`\`
+```
 
 Check static analysis:
 
-\`\`\`bash
+```bash
 composer analyze
-\`\`\`
+```
 
 Check coverage:
 
-\`\`\`bash
+```bash
 composer test:coverage
-\`\`\`
+```
 
 ---
 
-## 📁 Project Structure
+## �� Project Structure
 
-\`\`\`
+```
 src/
 ├── Models/
 │   ├── Consent.php
@@ -220,7 +220,7 @@ tests/
 ├── Fixtures/
 │   └── DummyConsentUser.php
 └── TestCase.php
-\`\`\`
+```
 
 ---
 

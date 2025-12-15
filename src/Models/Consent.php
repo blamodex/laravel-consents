@@ -20,16 +20,20 @@ use Illuminate\Support\Str;
  * @property int $consent_source_id
  * @property int $consentable_id
  * @property string $consentable_type
+ * @property int|null $transferable_id
+ * @property string|null $transferable_type
  * @property string|null $consent_text
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $consented_at
  * @property \Illuminate\Support\Carbon|null $revoked_at
+ * @property \Illuminate\Support\Carbon|null $transferred_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read ConsentType $consentType
  * @property-read ConsentSource $consentSource
  * @property-read Model $consentable
+ * @property-read Model|null $transferable
  */
 class Consent extends Model
 {
@@ -47,10 +51,13 @@ class Consent extends Model
         'consent_source_id',
         'consentable_id',
         'consentable_type',
+        'transferable_id',
+        'transferable_type',
         'consent_text',
         'status',
         'consented_at',
         'revoked_at',
+        'transferred_at',
     ];
 
     /**
@@ -63,6 +70,7 @@ class Consent extends Model
         return [
             'consented_at' => 'datetime',
             'revoked_at' => 'datetime',
+            'transferred_at' => 'datetime',
         ];
     }
 
@@ -109,6 +117,16 @@ class Consent extends Model
      * @return MorphTo<Model, Consent>
      */
     public function consentable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    /**
+     * Get the transferable entity (original owner before transfer).
+     *
+     * @return MorphTo<Model, Consent>
+     */
+    public function transferable(): MorphTo
     {
         return $this->morphTo();
     }
