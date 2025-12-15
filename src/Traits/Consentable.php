@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Blamodex\Consent\Traits;
 
+use Blamodex\Consent\Contracts\TransferableInterface;
 use Blamodex\Consent\Models\Consent;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
@@ -31,5 +32,12 @@ trait Consentable
         $consentService = app()->make(\Blamodex\Consent\Services\ConsentService::class);
 
         return $consentService->consentedToByConsentable($this, $slug);
+    }
+
+    public function claimConsents(TransferableInterface $fromTransferable): array
+    {
+        $consentService = app()->make(\Blamodex\Consent\Services\ConsentService::class);
+
+        return $consentService->transferConsents($fromTransferable, $this);
     }
 }

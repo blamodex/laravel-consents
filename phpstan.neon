@@ -12,5 +12,6 @@ parameters:
 
     ignoreErrors:
         - '#Trait Blamodex\\Consent\\Traits\\Consentable is used zero times and is not analysed.#'
+        - '#Trait Blamodex\\Consent\\Traits\\Transferable is used zero times and is not analysed.#'
         - '#Class .* uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types: TFactory#'
         - '#Method .* should return .* but returns .*\$this.*#'

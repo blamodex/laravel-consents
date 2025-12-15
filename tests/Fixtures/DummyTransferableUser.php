@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Blamodex\Consent\Tests\Fixtures;
 
-use Blamodex\Consent\Traits\Consentable;
-use Blamodex\Consent\Traits\Transferable;
 use Blamodex\Consent\Contracts\ConsentableInterface;
 use Blamodex\Consent\Contracts\TransferableInterface;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Blamodex\Consent\Traits\Transferable;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-class DummyConsentUser extends Model implements ConsentableInterface, TransferableInterface
+/**
+ * A fixture model for testing the Transferable trait.
+ */
+class DummyTransferableUser extends Model implements ConsentableInterface, TransferableInterface
 {
-    use Consentable;
     use Transferable;
     use HasFactory;
 
@@ -28,7 +29,7 @@ class DummyConsentUser extends Model implements ConsentableInterface, Transferab
     protected static function newFactory(): Factory
     {
         return new class extends Factory {
-            protected $model = DummyConsentUser::class;
+            protected $model = DummyTransferableUser::class;
 
             public function definition(): array
             {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Blamodex\Consent\Services;
 
 use Blamodex\Consent\Contracts\ConsentableInterface;
+use Blamodex\Consent\Contracts\TransferableInterface;
 use Blamodex\Consent\Models\Consent;
 use Blamodex\Consent\Models\ConsentType;
 use Blamodex\Consent\Models\ConsentSource;
@@ -177,5 +178,62 @@ class ConsentService
             ->first();
 
         return $existingConsent !== null;
+    }
+
+    public function revokedByConsentable(ConsentableInterface $consentable, string $consentTypeSlug): bool
+    {
+        $consentType = ConsentType::where('slug', $consentTypeSlug)->first();
+        if (!$consentType) {
+            return false;
+        }
+
+        $existingConsent = Consent::where('consentable_id', $consentable->getKey())
+            ->where('consentable_type', $consentable->getMorphClass())
+            ->where('consent_type_id', $consentType->id)
+            ->where('status', 'revoked')
+            ->first();
+
+        return $existingConsent !== null;
+    }
+
+    /**
+     * Get all consents for a consentable model.
+     *
+     * @param ConsentableInterface $consentable
+     * @return array<Consent>
+     */
+    public function getConsentsByConsentable(ConsentableInterface $consentable): array
+    {
+        return Consent::where('consentable_id', $consentable->getKey())
+            ->where('consentable_type', $consentable->getMorphClass())
+            ->get()
+            ->all();
+    }
+
+    /**
+     * Transfer consents from one entity to another with audit trail.
+     *
+     * @param TransferableInterface $fromTransferable
+     * @param ConsentableInterface $toConsentable
+     * @return array<Consent> Array of transferred consents
+     */
+    public function transferConsents(
+        TransferableInterface $fromTransferable,
+        ConsentableInterface $toConsentable
+    ): array {
+        $consents = $this->getConsentsByConsentable($fromTransferable);
+
+        $transferred = [];
+        foreach ($consents as $consent) {
+            $consent->transferable_id = $consent->consentable_id;
+            $consent->transferable_type = $consent->consentable_type;
+            $consent->consentable_id = $toConsentable->getKey();
+            $consent->consentable_type = $toConsentable->getMorphClass();
+            $consent->transferred_at = Carbon::now();
+            $consent->save();
+            $transferred[] = $consent;
+        }
+
+        return $transferred;
     }
 }
